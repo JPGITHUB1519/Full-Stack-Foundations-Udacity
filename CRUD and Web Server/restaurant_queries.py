@@ -9,6 +9,7 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind = engine)
 session = DBSession()
 
+# restaurant
 def get_restaurants() :
 	restaurants = session.query(Restaurant).all()
 	return restaurants
@@ -32,7 +33,41 @@ def delete_restaurant(idrestaurant):
 	session.delete(restaurant)
 	session.commit()
 
-edit_restaurant(17, 'value')
+# menu item
 
+def getMenuItems():
+	items = session.query(MenuItem).all()
+	return items
+
+def getMenuItemById(idmenuitem):
+	item = session.query(MenuItem).filter_by(id=idmenuitem).one()
+	return item
+
+def insertMenuItem(restaurant_id, name, course,description, price):
+	item = MenuItem(restaurant_id=restaurant_id, 
+					name=name,
+					course=course,
+					description=description,
+					price=price)
+	session.add(item)
+	session.commit()
+
+
+def editarMenuItem(idmenu, name, course, description, price):
+	item = getMenuItemById(idmenu)
+	item.name = name
+	item.course = course
+	item.description = description
+	item.price = price
+	session.add(item)
+	session.commit()
+
+def deleteMenuItem(idmenu):
+	item = getMenuItemById(idmenu)
+	session.delete(item)
+	session.commit()
+#EditMenuItem(1, 'Chorizo', 'salida', 'Queso Delicioso', 500)
+
+#deleteMenuItem(63)
 
 
