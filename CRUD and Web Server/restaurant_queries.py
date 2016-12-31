@@ -53,7 +53,7 @@ def insertMenuItem(restaurant_id, name, course,description, price):
 	session.commit()
 
 
-def editarMenuItem(idmenu, name, course, description, price):
+def editMenuItem(idmenu, name, course, description, price):
 	item = getMenuItemById(idmenu)
 	item.name = name
 	item.course = course
