@@ -9,10 +9,12 @@ Base.metadata.bind = engine
 DBSession = sessionmaker(bind = engine)
 session = DBSession()
 
-def get_restaurants() :
-	restaurants = session.query(Restaurant).all()
-	return restaurants
+# raw sql all
+data = session.execute("Select * from restaurant")
+for i in data :
+	print i.name
 
-restaurants = get_restaurants()
-for restaurant in restaurants :
-	print restaurant.name
+# raw sql one
+# one
+data = session.execute("Select * from restaurant where id = :var", {'var':1})
+print data.fetchone().name
