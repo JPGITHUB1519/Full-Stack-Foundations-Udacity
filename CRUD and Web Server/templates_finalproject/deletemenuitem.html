@@ -3,7 +3,7 @@
 	<div class="row">
 		<div class="center-inner-block">
 			<h2>Create Menu Item</h2>
-			<form>
+			<form method="post" action="{{ url_for('deleteMenuItem', restaurant_id=restaurant_id, menu_id=menu_id) }}">
 				<div class="form-group">
 					<label>Name</label>
 					<input type="text" class="form-control" name="name" value="{{ item.name }}">

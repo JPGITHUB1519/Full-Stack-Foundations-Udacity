@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant, MenuItem
 import restaurant_queries 
+import fpcrud
 # choosing database to work
 engine = create_engine('sqlite:///restaurantmenu.db')
 # connection betweens classes and tables
@@ -32,47 +33,113 @@ items = [
 
 item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$5.99','course' :'Entree', 'image':"http://uploads.ecbilla.com/1466/product/3061-cheese-pizza-product-1.png"}
 
+#### API ENDPOINTS ###
+@app.route('/restaurants/JSON/')
+def showRestaurantsJson():
+	""" return Json of all Restaurants """
+	restaurants = fpcrud.get_restaurants()
+	return jsonify(Restaurants=[restaurant.serialize for restaurant in restaurants])
+
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON/')
+def showMenuJson(restaurant_id):
+	items = fpcrud.getMenuItemByRestaurant(restaurant_id)
+	return jsonify(Items=[item.serialize for item in items])
+
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/JSON/')
+def showMenuItem(restaurant_id, menu_id):
+	item = fpcrud.getMenuItemById(menu_id)
+	return jsonify(item=item.serialize)
+
+### Normal Views ###
 @app.route('/')
 @app.route('/restaurants/')
 def showRestaurants():
 	""" View to Show all Restaurants"""
-	return render_template("restaurant.html", restaurants=restaurants)
+	return render_template("restaurant.html", 
+							restaurants=restaurants)
 
-@app.route('/restaurant/new/')
+@app.route('/restaurant/new/', methods=['GET', 'POST'])
 def newRestaurant():
 	""" View to Create a new Restaurant""" 
-	return render_template('newrestaurant.html')
+	if request.method == 'GET':
+		return render_template('newrestaurant.html')
+	if request.method == 'POST':
+		fpcrud.insert_restaurant(request.form['name'])
+		return redirect(url_for('showRestaurants'))
 
-@app.route('/restaurant/<int:restaurant_id>/edit/')
+@app.route('/restaurant/<int:restaurant_id>/edit/', methods=['GET','POST'])
 def editRestaurant(restaurant_id):
 	""" View to edit a existing Restaurant"""
-	return render_template('editrestaurant.html', restaurant=restaurant)
+	if request.method == 'GET':
+		return render_template('editrestaurant.html', 
+								restaurant=restaurant,
+								restaurant_id=restaurant_id)
+	if request.method == 'POST':
+		fpcrud.edit_restaurant(restaurant_id, request.form['name'])
+		return redirect(url_for('showRestaurants'))
 
-@app.route('/restaurant/<int:restaurant_id>/delete/')
-def deleteRestaurant(restaurant_id):
+@app.route('/restaurant/<int:restaurant_id>/delete/', methods=['GET','POST'])
+def deleteRestaurant(restaurant_id, methods=['GET', 'POST']):
 	""" View to delete a Restaurant"""
-	return render_template('deleterestaurant.html', restaurant=restaurant)
+	if request.method == 'GET':
+		return render_template('deleterestaurant.html',
+			 					restaurant=restaurant,
+			 					restaurant_id=restaurant_id)
+	if request.method == 'POST':
+		fpcrud.delete_restaurant(restaurant_id)
+		return redirect(url_for('showRestaurants'))
 
 @app.route('/restaurant/<int:restaurant_id>/')
 @app.route('/restaurant/<int:restaurant_id>/menu/')
 def showMenu(restaurant_id):
 	""" Show Menu of a Restaurant"""
-	return render_template('menu.html', restaurant=restaurant, items=items)
+	return render_template('menu.html',
+							restaurant_id=restaurant_id,
+							restaurant=restaurant, 
+							items=items)
 
-@app.route('/restaurant/<int:restaurant_id>/menu/new/')
+@app.route('/restaurant/<int:restaurant_id>/menu/new/', methods=['GET', 'POST'])
 def newMenuItem(restaurant_id):
 	""" Making new item for the menu of a rentaurant"""
-	return render_template('newmenuitem.html')
+	if request.method == 'GET':
+		return render_template('newmenuitem.html', restaurant_id=restaurant_id)
+	if request.method == 'POST':
+		fpcrud.insertMenuItem(restaurant_id,
+							  request.form["name"],
+							  request.form["course"],
+							  request.form["description"],
+							  request.form["price"],
+							  )
+		return redirect(url_for('showMenu', restaurant_id=restaurant_id))
 
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/edit/')
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/edit/', methods=['GET','POST'])
 def editMenuItem(restaurant_id, menu_id):
 	""" Editing a item of the menu of a restaurant"""
-	return render_template('editmenuitem.html', item=item)
+	if request.method == "GET":
+		return render_template('editmenuitem.html', 
+								item=item,
+								restaurant_id=restaurant_id,
+								menu_id=menu_id)
+	if request.method == "POST":
+		fpcrud.editMenuItem(menu_id,
+							  request.form["name"],
+							  request.form["course"],
+							  request.form["description"],
+							  request.form["price"],
+							  )
+		return redirect(url_for('showMenu', restaurant_id=restaurant_id))
 
-@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete/')
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete/', methods=['GET','POST'])
 def deleteMenuItem(restaurant_id, menu_id):
 	""" Deleting a item of the menu of a restaurant"""
-	return render_template('deletemenuitem.html', item=item)
+	if request.method == 'GET':
+		return render_template('deletemenuitem.html', 
+								item=item,
+								restaurant_id=restaurant_id,
+								menu_id=menu_id)
+	if request.method == 'POST':
+		fpcrud.deleteMenuItem(menu_id)
+	return redirect(url_for('showMenu', restaurant_id=restaurant_id))
 
 if __name__ == "__main__":
     app.debug = True
