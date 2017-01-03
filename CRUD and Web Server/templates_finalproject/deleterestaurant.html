@@ -9,9 +9,9 @@
 					<input type="text" class="form-control" value="{{ restaurant.name }}" name="name">
 				</div>
 				<div class="form-group">
-					<label>Select Image to Upload</label>
-					<input type="file" name="image">
-					<img src="{{ restaurant.image }}" class="img-little little-margin-top">
+					<label>Insert Image Link(Opcional)</label>
+					<input type="text" name="image_url">
+					<img src="{{ restaurant.image_url }}" class="img-little little-margin-top">
 				</div>
 				<h3>Are You sure you want <span class="error-color">DELETE</span> this restaurant?</h3>
 				<input type="submit" class="btn btn-submit" value="Delete">

@@ -12,6 +12,7 @@ class Restaurant(Base):
 	__tablename__ = 'restaurant'
 	name = Column(String(80), nullable = False)
 	id = Column(Integer, primary_key = True)
+	image_url = Column(String(250), default="http://placehold.it/300x300")
 
 	@property 
 	def serialize(self):
@@ -27,9 +28,10 @@ class MenuItem(Base):
 	course = Column(String(250))
 	description = Column(String(250))
 	price = Column(String(8))
+	image_url = Column(String(250), default="http://placehold.it/300x300")
 	restaurant_id = Column(Integer, ForeignKey('restaurant.id'))
 	restaurant = relationship(Restaurant)
-
+	
 	# We added this serialize function to be able to send JSON objects in a
 	# serializable format
 	@property

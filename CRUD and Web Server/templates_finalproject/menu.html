@@ -9,7 +9,7 @@
 		{% for item in items %}
 			<div class="col-md-4">
 				<h3>{{ item.name }}</h3>
-				<img src="{{ item.image }}">
+				<img src="{{ item.image_url }}" class="img-little">
 				<a class="display-block" href="{{ url_for('editMenuItem', restaurant_id=restaurant_id, menu_id=item.id) }}" class="Edit">Edit</a>
 				<a class="display-block" href="{{ url_for('deleteMenuItem', restaurant_id=restaurant_id, menu_id=item.id) }}" class="Edit">Delete</a>
 			</div>

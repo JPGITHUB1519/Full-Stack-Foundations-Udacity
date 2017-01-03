@@ -2,7 +2,7 @@
 {% block content %}
 	<div class="row">
 		<div class="center-inner-block">
-			<h2>Create Menu Item</h2>
+			<h2>Edit Menu Item</h2>
 			<form method="post" action="{{ url_for('editMenuItem', restaurant_id=restaurant_id, menu_id=menu_id) }}">
 				<div class="form-group">
 					<label>Name</label>
@@ -24,7 +24,7 @@
 				<div class="form-group">
 					<label>Select Image to Upload</label>
 					<input type="file" name="image">
-					<img src="{{ item.image }}" class="little-margin-top">
+					<img src="{{ item.image_url }}" class="little-margin-top img-little">
 				</div>
 				<input type="submit" class="btn btn-submit center-block" value="Edit">
 			</form>

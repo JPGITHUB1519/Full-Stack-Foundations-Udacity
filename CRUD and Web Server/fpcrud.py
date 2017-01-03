@@ -20,9 +20,12 @@ def get_restaurant_byid(idrestaurant):
 	restaurant = session.query(Restaurant).filter_by(id=idrestaurant).first()
 	return restaurant
 
-def insert_restaurant(name):
+def insert_restaurant(name, image_url):
 	""" Insert a Restaurant """
-	resturant = Restaurant(name=name)
+	if not image_url :
+		# if not exits image, put a placeholde
+		image_url = "http://placehold.it/300x300"
+	resturant = Restaurant(name=name, image_url=image_url)
 	session.add(resturant)
 	session.commit()
 
@@ -56,13 +59,17 @@ def getMenuItemByRestaurant(idrestaurant):
 	items = session.query(MenuItem).filter_by(restaurant_id=idrestaurant).all()
 	return items
 
-def insertMenuItem(restaurant_id, name, course,description, price):
+def insertMenuItem(restaurant_id, name, course,description, price, image_url):
 	""" Insert a new Item to the menu of a restaurant """
+	if not image_url :
+		# if not exits image, put a placeholde
+		image_url = "http://placehold.it/300x300"
 	item = MenuItem(restaurant_id=restaurant_id, 
 					name=name,
 					course=course,
 					description=description,
-					price=price)
+					price=price,
+					image_url = image_url)
 	session.add(item)
 	session.commit()
 
