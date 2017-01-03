@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, url_for, render_template, flash, jsonify
+from flask import Flask, request, redirect, url_for, render_template, flash, jsonify, session, g
 # template_folder -> change folder templates, static_folder = change static folder
 app = Flask(__name__, template_folder="templates_finalproject", static_folder="static_finalproject")
 from sqlalchemy import create_engine
@@ -6,13 +6,15 @@ from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant, MenuItem
 import restaurant_queries 
 import fpcrud
+from fputility import *
+from werkzeug import generate_password_hash, check_password_hash
 # choosing database to work
-engine = create_engine('sqlite:///restaurantmenu.db')
-# connection betweens classes and tables
-Base.metadata.bind = engine
+# engine = create_engine('sqlite:///restaurantmenu.db')
+# # connection betweens classes and tables
+# Base.metadata.bind = engine
 
-DBSession = sessionmaker(bind = engine)
-session = DBSession()
+# DBSession = sessionmaker(bind = engine)
+# session = DBSession()
 
 #Fake Restaurants
 restaurant = {'name':'KFC', 'id':'2', 'image' : 'https://upload.wikimedia.org/wikipedia/en/thumb/b/bf/KFC_logo.svg/1024px-KFC_logo.svg.png'}
@@ -32,6 +34,20 @@ items = [
 	{'name':'Spinach Dip', 'description':'creamy dip with fresh spinach','price':'$1.99', 'course':'Appetizer','id':'5', 'image' : 'https://www.aldi.us/fileadmin/fm-dam/Recipes/Appetizers/SpinachDip_D.jpg'} ]
 
 item =  {'name':'Cheese Pizza','description':'made with fresh cheese','price':'$5.99','course' :'Entree', 'image':"http://uploads.ecbilla.com/1466/product/3061-cheese-pizza-product-1.png"}
+
+### USER ASKING ###
+def getSession():
+	""" Check if the user is actually logged"""
+	if 'user' in session :
+		return session['user']
+	return None
+
+@app.before_request
+def beforeRequest():
+	""" Asking the cookie to the g variable each Request"""
+	g.user = None
+	if 'user' in session :
+		g.user = session['user']
 
 #### API ENDPOINTS ###
 @app.route('/restaurants/JSON/')
@@ -55,8 +71,11 @@ def showMenuItem(restaurant_id, menu_id):
 @app.route('/restaurants/')
 def showRestaurants():
 	""" View to Show all Restaurants"""
-	return render_template("restaurant.html", 
-							restaurants=restaurants)
+	if g.user :
+		return render_template("restaurant.html", 
+								restaurants=restaurants)
+	else :
+		return redirect(url_for('login'))
 
 @app.route('/restaurant/new/', methods=['GET', 'POST'])
 def newRestaurant():
@@ -141,6 +160,79 @@ def deleteMenuItem(restaurant_id, menu_id):
 		fpcrud.deleteMenuItem(menu_id)
 	return redirect(url_for('showMenu', restaurant_id=restaurant_id))
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+	if request.method == "GET" :
+		return render_template('login.html')
+	if request.method == "POST" :
+		# drop session in each request
+		session.pop('user', None)
+		if fpcrud.authenticateUser(request.form["username"], request.form["password"]):
+			session["user"] = request.form["username"]
+			return redirect(url_for('showRestaurants'))
+		else:
+			return render_template('login.html', error_login='Invalid Login')
+
+@app.route('/signup', methods=['GET','POST'])
+def signup():
+	if request.method == "GET":
+		return render_template('signup.html')
+
+	if request.method == "POST":
+		username = request.form["username"]
+		password = request.form["password"]
+		verify = request.form["verify"]
+		email = request.form["email"]
+		error_user = ""
+		error_password = ""
+		error_verify = ""
+		error_email = ""
+		error_exits = ""
+		cond_error = False
+
+		if not validateUsername(username):
+			error_user = "That's not a valid Username"
+			cond_error = True
+		
+		if fpcrud.checkExitsUser(username):
+			error_exits = "That's user already Exits"
+			cond_error = True
+
+		if not validatePassword(password):
+			error_password = "That's not a valid Password"
+			cond_error = True
+		else :
+			if password != verify :
+				error_verify = "Password Must be Equal"
+				cond_error = True
+		if not validateEmail(email):
+			error_email = "Invalid Email"
+			cond_error = True
+		if not cond_error :
+			password = generate_password_hash(password)
+			fpcrud.insertUser(username, password, email)
+			session["user"] = username
+			return redirect(url_for('showRestaurants'))
+
+		return render_template('signup.html',
+								error_user=error_user,
+								error_password=error_password,
+								error_verify=error_verify,
+								error_email=error_email,
+								error_exits=error_exits,
+								username=username,
+								email=email,
+								)
+
+@app.route('/logout')
+def logout():
+	""" Logout View DELETE THE SESSION VARIABLE FROM THE APP"""
+	if not getSession() :
+		return redirect(url_for('login'))
+	session.pop('user', None)
+	return redirect(url_for('login'))
+
 if __name__ == "__main__":
     app.debug = True
+    app.secret_key = "PYTHON"
     app.run()

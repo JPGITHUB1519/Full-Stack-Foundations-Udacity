@@ -1,9 +1,10 @@
 import sys
 
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy import create_engine
+from werkzeug import generate_password_hash, check_password_hash
 
 Base = declarative_base()
 
@@ -41,6 +42,23 @@ class MenuItem(Base):
 			'price' : self.price,
 			'course' : self.course
 			}
+
+class User(Base):
+	__tablename__ = 'user'
+	idusuario = Column(Integer, primary_key = True)
+	username = Column(String(50), unique=True)
+	password = Column(String(50))
+	email = Column(String(50))
+	is_active = Column(Boolean, default=True)
+	is_admin = Column(Boolean, default=False)
+
+	def setPassword(self, password):
+		""" Set an hashed password from werzeugh method"""
+		self.password = generate_password_hash(password)
+
+	def checkPassword(self, password):
+		""" Check if a password matches a hash"""
+		return check_password_hash(self.password, password)
 
 ### insert at end of the line ###
 engine = create_engine('sqlite:///restaurantmenu.db')

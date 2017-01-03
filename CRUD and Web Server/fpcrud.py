@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant, MenuItem
+from database_setup import Base, Restaurant, MenuItem, User
 # choosing database to work
 engine = create_engine('sqlite:///restaurantmenu.db')
 # connection betweens classes and tables
@@ -82,6 +82,63 @@ def deleteMenuItem(idmenu):
 	item = getMenuItemById(idmenu)
 	session.delete(item)
 	session.commit()
+
+########## User CRUD ##########
+def insertUser(username, password, email):
+	""" Create a new  normal User"""
+	user = User(username=username, password=password, email=email)
+	session.add(user)
+	session.commit()
+
+def insertAdminUser(username, password, email):
+	""" Create an admin user"""
+	user = User(username=username, password=password, email=email, is_admin=True)
+	session.add(user)
+	session.commit()
+
+def editUser(old_username, new_username, password, email):
+	""" Edit an existing User"""
+	user = session.query(User).filter_by(username=old_username).one()
+	user.username = new_username
+	user.password = password
+	user.email = email
+	session.add(user)
+	session.commit()
+
+def desactivateUser(username):
+	""" Desactivate User"""
+	user = session.query(User).filter_by(username=username).one()
+	user.is_active = False
+	session.add(user)
+	session.commit()
+
+def activateUser(username):
+	""" Activate User"""
+	user = session.query(User).filter_by(username=username).one()
+	user.is_active = True
+	session.add(user)
+	session.commit()
+
+def deleteUser(username):
+	""" Delete a User"""
+	user = session.query(User).filter_by(username=username).first()
+	session.delete(user)
+	session.commit()
+
+def checkExitsUser(username):
+	""" Check if a user Exits"""
+	user = session.query(User).filter_by(username=username).first()
+	if user :
+		return True
+	return False
+
+def authenticateUser(username, password):
+	""" Authentica a user """
+	user =  session.query(User).filter_by(username=username).first()
+	if user and user.checkPassword(password):
+		return True
+	return False
+
 
 
 # ########## Testing Zone ##########
